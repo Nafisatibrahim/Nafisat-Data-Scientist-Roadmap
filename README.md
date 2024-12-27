@@ -2,6 +2,8 @@
 
 Welcome to my personal Data Science Roadmap! 🚀
 
+![Roadmap](roadmap.jpg)
+
 Here, you'll find a complete 6-month roadmap where each week is dedicated to learning new and exciting topics in data science. The roadmap includes:
 
 - **Topics Covered:** Key concepts and tools required to master data science.
