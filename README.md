@@ -2,7 +2,11 @@
 
 Welcome to my personal Data Science Roadmap! 🚀
 
-[![Roadmap](roadmap.jpg)](data_scientist_roadmap.md)
+<div align="center">
+  <a href="data_scientist_roadmap.md">
+    <img src="roadmap.jpg" alt="Roadmap" width="500" height="300">
+  </a>
+</div>
 
 Here, you'll find a complete 6-month roadmap where each week is dedicated to learning new and exciting topics in data science. The roadmap includes:
 
