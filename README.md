@@ -2,7 +2,7 @@
 
 Welcome to my personal Data Science Roadmap! 🚀
 
-![Roadmap](roadmap.jpg)
+[![Roadmap](roadmap.jpg)](data_scientist_roadmap.md)
 
 Here, you'll find a complete 6-month roadmap where each week is dedicated to learning new and exciting topics in data science. The roadmap includes:
 
