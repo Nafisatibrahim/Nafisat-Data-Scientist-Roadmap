@@ -46,7 +46,7 @@ Enjoy the learning experience and happy coding! 🎉
 - [Data Science Roadmap](data_scientist_roadmap.md)  
 
 ## Connect with Me 🔗
-- 📫 Email: [nafisatibrahim@my.unt.edu](mailto:nafisatibrahim@my.unt.edu) | [nafisat.l@outlook.com](mailto:nafisat.l@outlook.com)  
+- 📫 Email: [nafisat.l@outlook.com](mailto:nafisat.l@outlook.com)  
 - 💼 LinkedIn: [linkedin.com/in/nafisat-ibrahim-14508725a](https://www.linkedin.com/in/nafisat-ibrahim-14508725a)  
 - 🌐 GitHub: [github.com/NafisatIbrahim](https://github.com/NafisatIbrahim)
 
