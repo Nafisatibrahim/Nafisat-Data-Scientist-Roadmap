@@ -2,6 +2,8 @@
 
 Welcome to my personal Data Science Roadmap! 🚀
 
+<p> CLICK THE IMAGE BELOW TO VIEW THE ROADMAP! 
+
 <div align="center">
   <a href="data_scientist_roadmap.md">
     <img src="roadmap.jpg" alt="Roadmap" width="500" height="300">
