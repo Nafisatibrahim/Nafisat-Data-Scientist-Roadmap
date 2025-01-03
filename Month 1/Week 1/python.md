@@ -1,3 +1,4 @@
+
 # Week 1: Introduction to Python
 
 ## Overview
@@ -24,6 +25,10 @@ is_learning = True
 
 print(f"My name is {name}, I'm {age} years old, and it's {is_learning} that I'm learning Python.")
 ```
+**Output:**
+```
+My name is Nafisat, I'm 25 years old, and it's True that I'm learning Python.
+```
 
 ---
 
@@ -36,14 +41,28 @@ print(f"My name is {name}, I'm {age} years old, and it's {is_learning} that I'm 
 
 ```python
 # For loop example
-for i in range(5):
+for i in range(3):
     print(f"This is iteration {i}")
+```
+**Output:**
+```
+This is iteration 0
+This is iteration 1
+This is iteration 2
+```
 
+```python
 # While loop example
 counter = 0
-while counter < 5:
+while counter < 3:
     print(f"Counter is {counter}")
     counter += 1
+```
+**Output:**
+```
+Counter is 0
+Counter is 1
+Counter is 2
 ```
 
 ---
@@ -58,6 +77,10 @@ def greet(name):
 
 print(greet("Nafisat"))
 ```
+**Output:**
+```
+Hello, Nafisat!
+```
 
 **Practice: Write a function to calculate the mean of a list of numbers.**
 ```python
@@ -66,6 +89,10 @@ def calculate_mean(numbers):
 
 data = [10, 20, 30, 40, 50]
 print(f"The mean is {calculate_mean(data)}")
+```
+**Output:**
+```
+The mean is 30.0
 ```
 
 ---
@@ -88,6 +115,12 @@ print(f"Data: {data}")
 print(f"Mean: {mean}")
 print(f"Median: {median}")
 ```
+**Output:**
+```
+Data: [10, 20, 30, 40, 50]
+Mean: 30
+Median: 30
+```
 
 ---
 
@@ -97,3 +130,5 @@ This week, we covered:
 - Loops (`for` and `while`)
 - Functions and how to define them
 - Writing a Python program to calculate basic statistics
+
+By completing this week, you've built a solid foundation in Python programming, which is essential for data science tasks.
