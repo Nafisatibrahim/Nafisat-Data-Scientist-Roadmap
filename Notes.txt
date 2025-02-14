@@ -67,6 +67,13 @@ III. Unsupervised Learning
   🔴 1. Unsupevised Learning
 
 
+Live Session: Data Collection
+What to consider when collecting data?
+-> Perform a controlled randomized experiment to minimize the problem of confounding
+
+  
+36
+
 
 
 
