@@ -26,4 +26,33 @@ Variance: Variance helps us understand how far our random variable is spread out
 Covariance: Covariance, on the other hand, measures the extent to which two random variables vary together.
 Note: The function numpy.cov() in Python's Numpy variable can be used to get the covariance matrix in Python.
 
+  🔴 4. Dimensionality Reduction (reduce number of columns or features)
+Two important techniques:
+  - PCA
+  - t-SNE
+PCA (Principle Component Analysis): the main idea is to reduce the dimensionality of a dataset consisting of many variables correlated with each other, either heavily or lightly, while retaining the variation present in the dataset.
+This is done by transforming the variables to a new coordinate space of variables, which are known as principal components (or simply, the PCs), and are orthogonal to each other.
+The selection of principal components is such that the retention of variation present in the original variables is the maximum for the first principal component and decreases as we move down in the order. The principal components are the eigenvectors of the covariance matrix, and hence they are orthogonal.
+t-SNE: this algorithm calculates a similarity measure between pairs of instances in the high dimensional space and in the low dimensional space. This is done by setting the probabilities from the low-dimensional space similar to those of the high dimensional space. We measure the difference between the probability distributions of the two-dimensional spaces using Kullback-Leibler divergence and try to optimize it.
+
+  🔴 5. Kullback-Leibler (KL) Divergence
+Sometimes, in machine learning, it is desirable to analyze the actual and observed probability distribution to quantify the difference in the distributions of a random variable. We calculate KL divergence to measure that difference.
+Divergence: is a measure of how one distribution differs from another. It is not symmetrical in nature i.e. score of the divergence for distributions p and q would give a different score from q and p.
+KL Divergence: It quantifies how much one probability distribution differs from another probability distribution.
+Two important points to note about KL divergence:
+  a. The lower the KL divergence value, the better the two distributions match. If two distributions perfectly match, then it is zero.
+  b. It is not symmetrical
+Note: In Python, we use the rel_entr function to calculate the KL divergence.
+
+  🔴 6. The Binomial and Bernoulli Distributions
+A Bernoulli trial (or a Binomial trial) is a random experiment with exactly 2 possible outcomes, “success” or “failure”, in which the probability of success is the same every time the experiment is conducted. 
+There are some of the assumptions that need to be satisfied for a random variable to follow a binomial distribution. They are as follows: 
+  1. There are a fixed number of trials. (represented by the variable n)
+  2. Each trial has 2 outcomes (called "success" and "failure" for convenience)
+  3. The trials are all independent of one another.
+  4. The probability of success, i.e., p is the same for all trials.
+
+II. Network Analysis
+  🔴 1. Power-Law Distribution
+
 
