@@ -1,0 +1,15 @@
+I. Data Analysis and Visualization
+Tools and technicques utilized to  explore data and discover hidden patterns using visualization. 
+  1. Basica of Linear Algebra
+Matrix: A matrix of size m x n is a two-dimensional array that has m rows and n columns.
+Vector: A vector is a one-dimensional array that has only one row and one column.
+Addition and Substractio: element-wise
+Multiplying a matrix with a vector: To multiply a matrix with a column (or row) vector, the matrix must have the same number of columns (or rows) as the number of elements in the column (or row) vector.
+Multiplying a matrix with another matrix: 
+  - Dot Product
+  - Cross Product
+Determinant of a matrix:The determinant of a matrix is a special number that can only be calculated from a square matrix, i.e., a matrix with the same number of rows and columns. The determinant is calculated using the below formula:
+ det(A)= a*d - b*c
+<img src="square-matrix.jpg" alt="Sqaure" width="50" height="50">
+
+Note: In Python, vectors and matrices are represented as Numpy arrays. Numpy is one of the most popular linear algebra packages in Python and can be used to implement several basic mathematical operations on matrices, such as calculating dot products and determinants.
