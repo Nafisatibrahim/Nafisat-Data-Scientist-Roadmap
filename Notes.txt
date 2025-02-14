@@ -54,5 +54,19 @@ There are some of the assumptions that need to be satisfied for a random variabl
 
 II. Network Analysis
   🔴 1. Power-Law Distribution
+Power-Law Distribution: is a term used when there are only a small number of observations which have a very high value of a certain characteristic, and a large number of observations which have a small value for that characteristic. Many unequally-distributed phenomena in the real world follow such a distribution.
+Graph Theory: is the study of graphical structures that model relations between two variables or objects. Structurally, graphs are merely a collection of nodes inter-connected by edges in various ways.
+Graphs are used by various algorithms in machine learning to perform tasks like clustering, classification, and regression.
+A graph is usually represented using nodes (or vertices) and edges (or links).
+
+  🔴 2. Matrix Representation of Graphs
+An adjacency matrix is the matrix representation of a graph/network, depicting the connections between the nodes in the graph merely as numbers of a matrix. This equivalence between graphs and matrices is an important part of modern graph theory.
+Weighted Adjacency Matrix: We use the weighted adjacency matrix in the case of a weighted directed or weighted undirected graph. A weighted graph is a type of graph where each link/edge is also given a numerical weight.
+
+III. Unsupervised Learning
+  🔴 1. Unsupevised Learning
+
+
+
 
 
