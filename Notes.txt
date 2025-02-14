@@ -1,6 +1,7 @@
 I. Data Analysis and Visualization
 Tools and technicques utilized to  explore data and discover hidden patterns using visualization. 
-  1. Basica of Linear Algebra
+
+  🔴 1. Basics of Linear Algebra
 Matrix: A matrix of size m x n is a two-dimensional array that has m rows and n columns.
 Vector: A vector is a one-dimensional array that has only one row and one column.
 Addition and Substractio: element-wise
@@ -13,3 +14,16 @@ Determinant of a matrix:The determinant of a matrix is a special number that can
 <img src="square-matrix.jpg" alt="Sqaure" width="50" height="50">
 
 Note: In Python, vectors and matrices are represented as Numpy arrays. Numpy is one of the most popular linear algebra packages in Python and can be used to implement several basic mathematical operations on matrices, such as calculating dot products and determinants.
+
+  🔴 2. Eigenvectors and Eigenvalues
+Linear transformation
+Eigenvectors: A vector that keeps its direction when a linear transformation is applied.
+Eigenvalue:  The value with which the eigenvector gets scaled, is known as the Eigenvalue,
+Note: If a matrix is not invertible then the determinant of the matrix is equal to zero.
+
+  🔴 3. The Covariance Matrix
+Variance: Variance helps us understand how far our random variable is spread out from the mean.
+Covariance: Covariance, on the other hand, measures the extent to which two random variables vary together.
+Note: The function numpy.cov() in Python's Numpy variable can be used to get the covariance matrix in Python.
+
+
