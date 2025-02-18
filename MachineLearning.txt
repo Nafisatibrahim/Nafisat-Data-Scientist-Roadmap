@@ -1,3 +1,32 @@
 Machine Learning
 
+I. Introduction to Supervised Learning and Regression
 
+  🔴 1. Basic Terminologies
+  🔴 2. Supervised Learning - Linear Regression
+There are mainly 2 types of supervised learning algorithms:
+a. Regression, where the output variable is a continuous variable, for example, the price of a house.
+b. Classification, where the output variable is categorical, for example, approve the loan or not, i.e., yes or no categories.
+
+Linear Regression: 
+Linear Regression is useful for finding the linear relationship between the independent and dependent variables of a dataset. 
+
+What is an error?
+The difference between the actual value and the predicted value is called the error or residual.
+
+Metrics to measure the performance of a regression model:
+R-squared: R-squared is a useful performance metric to understand how well the regression model has fitted over the training data. For example, an R-squared of 80% reveals that the model is able to capture 80% of the variation in the dependent variable. A higher R-squared value indicates a better fit for the model.
+
+Adjusted R-squared: The adjusted R-squared is a modified version of R-squared that takes into account the number of independent variables present in the model. The R-squared always increases when a new independent variable is added to the model, irrespective of whether that variable adds value to the model or not. Hence, R-squared might be misleading when we have multiple independent variables and cannot identify unnecessary variables included in the model.
+
+However, when a new variable is added, the adjusted R-squared increases if that variable adds value to the model, and decreases if it does not. Hence, adjusted R-squared is a better choice of metric than R-squared to evaluate the quality of a regression model with multiple independent variables, because adjusted R-squared only remains high when all those independent variables are required to predict the value of the dependent variable well; it decreases if there are any independent variables which don't have a significant effect on the predicted variable.
+
+RMSE: RMSE stands for Root Mean Squared Error. It is calculated as the square root of the mean of the squared differences between the actual output and the predictions. The lower the RMSE the better the performance of the model. Mathematically, it can be given as follows:     
+
+  🔴 3. Maximum Likelihood
+To estimate the parameters, the above expression has to be maximized and the maximum value of the above expression is called the maximum likelihood. 
+Empirical Risk Minimization: If the error is high, then it can be considered that the algorithm is not making predictions close to the actual value, i.e., the prediction is at higher risk. Hence, the higher the error, the higher the risk and vice versa. Empirical risk can be defined as the collective error made by the model over all the training records. During the estimation of the parameters of the model, we use the principle of empirical risk minimization where the empirical risk is minimized to get the model parameters. 
+
+Note: A higher empirical risk is equivalent to a lower likelihood and vice versa.
+
+II. Model Evaluation, Cross-Validation and Bootstraping
