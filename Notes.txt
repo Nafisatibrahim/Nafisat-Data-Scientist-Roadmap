@@ -65,6 +65,45 @@ Weighted Adjacency Matrix: We use the weighted adjacency matrix in the case of a
 
 III. Unsupervised Learning
   🔴 1. Unsupevised Learning
+Data Science and machine learning algorithmic techniques can be divided into three categories:
+  1. Supervised learning: The algorithm has prior data (labeled data) to learn from.
+  2. Unsupervised learning: The algorithm has no prior labeled data to learn from i.e., it learns from unlabeled data by finding patterns among examples and grouping them accordingly.
+  3. Reinforcement learning:The algorithm learns patterns or behaviors in a recursive manner by taking actions to maximize a certain reward, and uses feedback from the environment to learn the best action to take under the right circumstances in order to maximize that reward.
+
+Unsupervised Learning is a category of techniques that train computers to use a set of unlabeled / unseen data and learn by themselves. The algorithm is provided with a large volume of data and expected to identify hidden patterns. Since there's no prior information / label available for each data instance, there is no defined / correct outcome. The machines only need to determine if there are any patterns in the given data.
+Unsupervised Learning is utilised in the following use cases:
+  1. Clustering: the key idea is to divide the data into groups such that each group shares similar properties and each group is as dissimilar as possible to the other groups.
+  2. Association
+  3. Dimensionality Reduction 
+
+  🔴 2. Distance and Scaling Measures
+Unsupervised learning algorithms use different distance measures or similarity / dissimilarity measures between each pair of observations to group data into different clusters. Points which are close to each other on that distance metric are likely to be grouped into the same cluster, while points far apart on that distance metric are likely to be members of different clusters. All this is done by computing a distance matrix which has distances between every pair of observations. There are different ways of calculating these distances, some of which are mentioned below:
+  1. Euclidean distance: Euclidean distance is calculated as the square root of the sum of the squared differences b/w two vectors.
+  2. Manhattan distance: Also called city block distance, it calculates the distance between two points by drawing an orthogonal, zig-zag grid between them.
+
+Scaling: 
+Normalization: One of the ways of scaling the data is so that all the values lie between 0 and 1. This is called Normalization. A value can be normalized as follows:
+
+                        y = (x–min) / (max-min)
+where,
+y: normalized version of the variable
+x: variable of interest
+min: minimum value of the variable x in this dataset
+max: maximum value of the variable x in this dataset
+
+Standardization:  is another way of scaling the data, where the mean of the observations becomes 0 and the standard deviation is 1.  A value can be standardized as follows:
+
+                        y = (x-mean) / std_dev
+
+where,
+y: standardized version of the variable
+x: variable of interest
+mean: average (arithmetic mean) of the variable x in the dataset
+std_dev: standard deviation of the variable x in the dataset
+
+  🔴 3. K-Means Clustering
+K-means Clustering is an unsupervised learning algorithm. Like other clustering algorithms, it tries to aggregate similar objects into groups called clusters.
+
 
 
 Live Session: Data Collection
