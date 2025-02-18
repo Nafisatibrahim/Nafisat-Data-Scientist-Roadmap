@@ -103,16 +103,71 @@ std_dev: standard deviation of the variable x in the dataset
 
   🔴 3. K-Means Clustering
 K-means Clustering is an unsupervised learning algorithm. Like other clustering algorithms, it tries to aggregate similar objects into groups called clusters.
+In K-means Clustering, K refers to the number of clusters required. The concept of a centroid, which is the geometric center of a cluster, is used to determine the clusters that K-means finds in the dataset.
 
-
+Working of K-Means Clustering: The steps involved in K-means Clustering are:
+  1. Choose the number of clusters K
+  2. Initialize the centroids 
+  3. Assign each data point to the closest centroid.
+  4. Update the centroid by taking the mean of the cluster.
+-> Repeat steps 3 and 4 until convergence i.e No discernible change in centroids is observed.
+-> For step 3, to assign each data point to the nearest centroid, we use the distance between the centroid and the data point. This distance can be found using Euclidean distance.
+Therefore, K-means clustering uses the Euclidean distance to allocate each of the data points to its nearest cluster, so that the sum of squares within each cluster is minimum.
 
 Live Session: Data Collection
 What to consider when collecting data?
 -> Perform a controlled randomized experiment to minimize the problem of confounding
 
-  
-36
+Evaluation Methods: For K-means clustering we need a fixed value of K, and that should be known before performing the method. It is not a learned parameter, and we will have to figure it out. To find out the optimal K number, one method we can use is called the ELBOW method.
 
+ELBOW Method:
+In this method, we take different values of K i.e from 1 to the range required. For each value of K, we calculate the sum of squares within clusters, usually called WCSS (Within Cluster Sum of Squares). So we calculate the sum of squared distance between the centroids and the data points for each cluster, and do a summation of all the clusters. Then, we plot WCSS vs K - the plot shape looks similar to that of an elbow. As we see in the graph, as K increases the WCSS is going to decrease. The optimal point is at the elbow - after that as K increases, the fall in WCSS is not that significant. In the given example, K=7 appears to be the optimal value of K.
 
+Assumptions:
+1. K-means Clustering is limited to linear cluster boundaries: The fundamental model assumptions of K-means Clustering (points will be closer to their cluster center than to others), means that the algorithm will often be ineffective if the clusters have complicated geometries.
+2. All clusters are of the same size.
+3. Clusters have the same extent in every direction. This assumption would not be true in a dataset where different measurements are in different units.
+4. Clusters have similar numbers of points assigned to them.
+
+Applications:
+Document Clustering - Group similar documents together
+Customer Segmentation - Divide customers into similar groups
+Image Segmentation - Grouping similar pixels together
+
+  🔴 4. Gaussian Mixture Models (need to review, didn't undertand it)
+
+  🔴 5. Hierarchical Clustering
+Hierarchical Clustering is one of the many types of clustering algorithms. 
+
+There are 2 types of hierarchical clustering:
+  1. Agglomerative clustering 
+  2. Divisive clustering 
+
+------Agglomerative Clustering:------ 
+It is a bottom-up clustering method.
+Step 1: Let’s say we have N data points, then each of the points will be considered as N different clusters.
+Step 2: Find two clusters that are closest among the N clusters (from step 1) and combine them into a single cluster. This will result in having N-1 clusters now.
+Step 3: Find the next 2 closest clusters and combine them into a single cluster and we have N-2 clusters now. This will be continued till we have only one cluster containing all the data points. The below graphic demonstrates this process.
+
+To calculate the distance between two clusters, we use the linkage method. There are different types of linkages that can be used to compare the distance between two clusters:
+a. Complete-linkage: The distance between two clusters is defined as the longest distance between two points in each cluster.  
+b. Average-linkage: The distance between two clusters is defined as the average distance between each point in one cluster to every point in the other cluster. Average-linkage and complete-linkage are the two most popular distance metrics in hierarchical clustering.
+c. Centroid-linkage: The distance between the centroids of two clusters. It finds the centroid of cluster 1 and centroid of cluster 2 and then calculates the distance between the two before merging.
+d. Single-linkage: The distance between two clusters is defined as the shortest distance between two points in each cluster. This linkage may be used to detect high values in your dataset which may be outliers as they will be merged at the end. 
+
+------Divisive Clutsering------
+In contrast to Agglomerative clustering, divisive clustering is a top-down clustering method. We work backward in this method.
+Step 1: All the points are grouped together into a single cluster.
+Step 2: The single cluster is split into two different clusters. 
+Step 3: Step 2 is repeated till the number of clusters is equal to the number of data points.  
+
+Dendrogram
+A dendrogram is a diagram that shows the hierarchical relationship between objects. It is used to see the output of hierarchical clustering. The below graphic explains, how the dendrogram is being formed as the clustering happens.
+
+  🔴 6. DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
+DBSCAN is another type of clustering algorithm. It works based on the concept of density difference. Density is interpreted as the concentration of the samples present in a region. The algorithm differentiates between high and low-density regions and clusters the points accordingly. 
+There are two parameters to the algorithm which is used to define the term dense.
+- epsilon (eps): It specifies how close points should be to each other to be considered as part of a cluster. Two points are considered neighbors if the distance between the two points is below the threshold epsilon.
+- minPoints: the minimum number of points to form a dense region. For example, if we set the minPoints parameter as 4, then we need at least 4 points to form a dense region.
 
 
