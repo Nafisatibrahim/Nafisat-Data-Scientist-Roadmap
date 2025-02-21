@@ -33,4 +33,7 @@ II. Model Evaluation, Cross-Validation and Bootstraping
 
 Live Class
 - Assessment: How good is our method, our model, and our prediction? Testing, validation
+- Goal: predict Y based on X
+- Understand: build a model, a theory, a narrative, a mechanism
+- 1st thing to do is Visualiz
 
