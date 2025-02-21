@@ -30,3 +30,7 @@ Empirical Risk Minimization: If the error is high, then it can be considered tha
 Note: A higher empirical risk is equivalent to a lower likelihood and vice versa.
 
 II. Model Evaluation, Cross-Validation and Bootstraping
+
+Live Class
+- Assessment: How good is our method, our model, and our prediction? Testing, validation
+
