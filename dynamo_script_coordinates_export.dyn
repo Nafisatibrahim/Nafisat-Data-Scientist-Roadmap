@@ -1,0 +1,358 @@
+{
+  "Uuid": "3b684c67-c18a-497d-b26b-e2001fe8ac43",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "dynamo_script_coordinates_export",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "# Load the Python Standard and DesignScript Libraries\r\nimport sys\r\nimport clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\nimport clr\r\nclr.AddReference('RevitServices')\r\nfrom RevitServices.Persistence import DocumentManager\r\n\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitNodes')\r\nimport Autodesk\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, BuiltInCategory, Category, ElementId\r\n\r\n# Get the active Revit document\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n# Get all categories in the document\r\ncategories = doc.Settings.Categories\r\n\r\n# Initialize lists for storing data\r\nelement_ids = []\r\nelement_categories = []\r\n\r\n# Loop through all categories and collect elements\r\nfor cat in categories:\r\n    if cat.CategoryType == Autodesk.Revit.DB.CategoryType.Model:  # Only consider model categories\r\n        try:\r\n            # Collect all elements in the current category\r\n            collector = FilteredElementCollector(doc).OfCategoryId(cat.Id).WhereElementIsNotElementType().ToElements()\r\n            \r\n            for elem in collector:\r\n                element_ids.append(elem.Id.IntegerValue)  # Get the element ID\r\n                element_categories.append(cat.Name)  # Get category name\r\n        except:\r\n            pass  # Skip categories that can't be filtered this way\r\n\r\n# Output results\r\nOUT = element_ids, element_categories\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "289e792a56f040209ae311368c8bd3ed",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "a7f8b04fc0fc4dd6bea495989152cba5",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "462f34c937fb4aa898dba4a75a503912",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "# Load the Python Standard and DesignScript Libraries\r\nimport sys\r\nimport clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\nimport clr\r\nclr.AddReference('RevitServices')\r\nfrom RevitServices.Persistence import DocumentManager\r\n\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitNodes')\r\nimport Autodesk\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, ElementId, Parameter\r\n\r\n# Get the active Revit document\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n# Define categories to exclude\r\nexcluded_categories = [\"Air Terminals\", \"Sketch\", \"Area Base Load\", \"Area Schemes\", \"Rooms\", \"Spaces\"]\r\n\r\n# Initialize lists for storing data\r\ndata = []\r\n\r\n# Define column headers\r\nheaders = [\"Element ID\", \"Category\", \"Element Name\", \"Element Length\", \"System Abbreviation\", \r\n           \"System Classification\", \"Building Location MTI\", \"Element Level\", \"Element Type\"]\r\ndata.append(headers)  # First row: column headers\r\n\r\n# Collect all model elements\r\ncollector = FilteredElementCollector(doc).WhereElementIsNotElementType().ToElements()\r\n\r\n# Function to safely get parameter value\r\ndef get_param_value(element, param_name):\r\n    param = element.LookupParameter(param_name)\r\n    if param and param.HasValue:\r\n        return param.AsString() if param.StorageType == Autodesk.Revit.DB.StorageType.String else param.AsValueString()\r\n    return \"N/A\"\r\n\r\n# Function to get element type robustly\r\ndef get_element_type(element):\r\n    element_type = get_param_value(element, \"Type Name\")\r\n    if element_type == \"N/A\":\r\n        element_type = get_param_value(element, \"Family Name\")\r\n    if element_type == \"N/A\":\r\n        try:\r\n            element_type = doc.GetElement(element.GetTypeId()).Name  # Get actual type name\r\n        except:\r\n            element_type = \"Unknown Type\"\r\n    return element_type\r\n\r\n# Loop through elements and extract properties\r\nfor elem in collector:\r\n    if not elem.Category or elem.Category.Name in excluded_categories:\r\n        continue  # Skip elements with no category or unwanted categories\r\n    \r\n    row = []  # Each element will be stored as a row\r\n    \r\n    # Get Element ID and Category\r\n    row.append(elem.Id.IntegerValue)\r\n    row.append(elem.Category.Name)\r\n\r\n    # Get Element Name (fallback to Family and Type if Name is missing)\r\n    name = get_param_value(elem, \"Name\")\r\n    if name == \"N/A\":\r\n        name = get_param_value(elem, \"Family and Type\")\r\n    row.append(name)\r\n\r\n    # Get Element Length (if applicable)\r\n    row.append(get_param_value(elem, \"Length\"))\r\n\r\n    # Get System Abbreviation (for MEP elements)\r\n    row.append(get_param_value(elem, \"System Abbreviation\"))\r\n\r\n    # Get System Classification (New)\r\n    row.append(get_param_value(elem, \"System Classification\"))\r\n\r\n    # Get Building Location MTI (New)\r\n    row.append(get_param_value(elem, \"Building Location MTI\"))\r\n\r\n    # Get Element Level (if applicable)\r\n    row.append(get_param_value(elem, \"Level\"))\r\n\r\n    # Get Element Type (using improved method)\r\n    row.append(get_element_type(elem))\r\n\r\n    # Add row to data list\r\n    data.append(row)\r\n\r\n# Output the final formatted list for Excel\r\nOUT = data\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "ef135d67b387442d98648891556ca146",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "67e0a81c4cd5421c9a235f6b9e679914",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "f4f1a18e693e48a3b00ef06fb3fc0968",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "Id": "64c166e26c8246cc8a3fa7a4ecb6e84d",
+      "NodeType": "FunctionNode",
+      "Inputs": [
+        {
+          "Id": "1f7f457b57a24f81b23b20d1eaf8f8b9",
+          "Name": "filePath",
+          "Description": "string",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "8ac34f641e0047a0a3e2dbdc8c22cf89",
+          "Name": "sheetName",
+          "Description": "string",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "d64095c77a8b404fb43670e2ce3cddcc",
+          "Name": "startRow",
+          "Description": "int",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "65a014c882074f82b19c95a44614d2f6",
+          "Name": "startColumn",
+          "Description": "int",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "8eac470dc69e4b3e8111d8a6f87c3a22",
+          "Name": "data",
+          "Description": "var[][]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "97ba93edfeb2486bb5e16ebc82eaa808",
+          "Name": "overWrite",
+          "Description": "bool\nDefault value : false",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "f0268d8bd7934307a08a16b56f4515a7",
+          "Name": "writeAsString",
+          "Description": "bool\nDefault value : false",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "f458541e18a7455ea0d97ccf698014a6",
+          "Name": "var[][]",
+          "Description": "var[][]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "FunctionSignature": "DSOffice.Data.ExportToExcel@string,string,int,int,var[][],bool,bool",
+      "Replication": "Auto",
+      "Description": "Data.ExportToExcel (filePath: string, sheetName: string, startRow: int, startColumn: int, data: var[][], overWrite: bool = false, writeAsString: bool = false): var[][]"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "Id": "77c92a4aa6524d26b045a10e87e579aa",
+      "NodeType": "CodeBlockNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "9e5488715e85408dae9d3a961dd4457b",
+          "Name": "",
+          "Description": "Value of expression at line 1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "91c46303aada4050a654ad4ff9131742",
+          "Name": "",
+          "Description": "Value of expression at line 2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "788b32bd9bc2450f8ce49f83309c86a0",
+          "Name": "",
+          "Description": "Value of expression at line 3",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly",
+      "Code": "\"Sheet1\";\n0;\n0;"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.Filename, CoreNodeModels",
+      "Id": "cfafdc3427eb49c5979220bd3270b9e4",
+      "NodeType": "ExtensionNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "309c022e0af14dc18b4dda2e903641a2",
+          "Name": "",
+          "Description": "File Path",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows you to select a file on the system and returns its file path",
+      "HintPath": "No file selected.",
+      "InputValue": "No file selected."
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "f4f1a18e693e48a3b00ef06fb3fc0968",
+      "End": "8eac470dc69e4b3e8111d8a6f87c3a22",
+      "Id": "e4a3ddd9e2aa4c4cb99f5c18d4c902da",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "9e5488715e85408dae9d3a961dd4457b",
+      "End": "8ac34f641e0047a0a3e2dbdc8c22cf89",
+      "Id": "06c4cc19b7b64d8e980de353d50d4a78",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "91c46303aada4050a654ad4ff9131742",
+      "End": "d64095c77a8b404fb43670e2ce3cddcc",
+      "Id": "4b2cde0ccf5b475ca4379cf63c1999be",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "788b32bd9bc2450f8ce49f83309c86a0",
+      "End": "65a014c882074f82b19c95a44614d2f6",
+      "Id": "683b423500e04b6f8ca130ca32206922",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "309c022e0af14dc18b4dda2e903641a2",
+      "End": "1f7f457b57a24f81b23b20d1eaf8f8b9",
+      "Id": "2600f8ab1b3445979d97501d127862f7",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "EnableLegacyPolyCurveBehavior": null,
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "3.3",
+      "Data": {}
+    },
+    {
+      "ExtensionGuid": "DFBD9CC0-DB40-457A-939E-8C8555555A9D",
+      "Name": "Generative Design",
+      "Version": "8.2",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "3.3.0.6316",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "_Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Id": "289e792a56f040209ae311368c8bd3ed",
+        "Name": "Python Script",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 76.0,
+        "Y": 35.0
+      },
+      {
+        "Id": "ef135d67b387442d98648891556ca146",
+        "Name": "Python Script",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 86.0,
+        "Y": 493.0
+      },
+      {
+        "Id": "64c166e26c8246cc8a3fa7a4ecb6e84d",
+        "Name": "Data.ExportToExcel",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 598.2073179471313,
+        "Y": 257.5196192625459
+      },
+      {
+        "Id": "77c92a4aa6524d26b045a10e87e579aa",
+        "Name": "Code Block",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 315.1742373276994,
+        "Y": 314.3752183570866
+      },
+      {
+        "Id": "cfafdc3427eb49c5979220bd3270b9e4",
+        "Name": "File Path",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 346.01106589279186,
+        "Y": 149.24929338439097
+      }
+    ],
+    "Annotations": [],
+    "X": 125.50003024975359,
+    "Y": 123.33058758209626,
+    "Zoom": 0.6917013637693442
+  }
+}
