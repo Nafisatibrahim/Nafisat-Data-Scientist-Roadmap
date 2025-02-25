@@ -43,7 +43,7 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "Code": "# Load the Python Standard and DesignScript Libraries\r\nimport sys\r\nimport clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\nimport clr\r\nclr.AddReference('RevitServices')\r\nfrom RevitServices.Persistence import DocumentManager\r\n\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitNodes')\r\nimport Autodesk\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, ElementId, Parameter\r\n\r\n# Get the active Revit document\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n# Define categories to exclude\r\nexcluded_categories = [\"Air Terminals\", \"Sketch\", \"Area Base Load\", \"Area Schemes\", \"Rooms\", \"Spaces\"]\r\n\r\n# Initialize lists for storing data\r\ndata = []\r\n\r\n# Define column headers\r\nheaders = [\"Element ID\", \"Category\", \"Element Name\", \"Element Length\", \"System Abbreviation\", \r\n           \"System Classification\", \"Building Location MTI\", \"Element Level\", \"Element Type\"]\r\ndata.append(headers)  # First row: column headers\r\n\r\n# Collect all model elements\r\ncollector = FilteredElementCollector(doc).WhereElementIsNotElementType().ToElements()\r\n\r\n# Function to safely get parameter value\r\ndef get_param_value(element, param_name):\r\n    param = element.LookupParameter(param_name)\r\n    if param and param.HasValue:\r\n        return param.AsString() if param.StorageType == Autodesk.Revit.DB.StorageType.String else param.AsValueString()\r\n    return \"N/A\"\r\n\r\n# Function to get element type robustly\r\ndef get_element_type(element):\r\n    element_type = get_param_value(element, \"Type Name\")\r\n    if element_type == \"N/A\":\r\n        element_type = get_param_value(element, \"Family Name\")\r\n    if element_type == \"N/A\":\r\n        try:\r\n            element_type = doc.GetElement(element.GetTypeId()).Name  # Get actual type name\r\n        except:\r\n            element_type = \"Unknown Type\"\r\n    return element_type\r\n\r\n# Loop through elements and extract properties\r\nfor elem in collector:\r\n    if not elem.Category or elem.Category.Name in excluded_categories:\r\n        continue  # Skip elements with no category or unwanted categories\r\n    \r\n    row = []  # Each element will be stored as a row\r\n    \r\n    # Get Element ID and Category\r\n    row.append(elem.Id.IntegerValue)\r\n    row.append(elem.Category.Name)\r\n\r\n    # Get Element Name (fallback to Family and Type if Name is missing)\r\n    name = get_param_value(elem, \"Name\")\r\n    if name == \"N/A\":\r\n        name = get_param_value(elem, \"Family and Type\")\r\n    row.append(name)\r\n\r\n    # Get Element Length (if applicable)\r\n    row.append(get_param_value(elem, \"Length\"))\r\n\r\n    # Get System Abbreviation (for MEP elements)\r\n    row.append(get_param_value(elem, \"System Abbreviation\"))\r\n\r\n    # Get System Classification (New)\r\n    row.append(get_param_value(elem, \"System Classification\"))\r\n\r\n    # Get Building Location MTI (New)\r\n    row.append(get_param_value(elem, \"Building Location MTI\"))\r\n\r\n    # Get Element Level (if applicable)\r\n    row.append(get_param_value(elem, \"Level\"))\r\n\r\n    # Get Element Type (using improved method)\r\n    row.append(get_element_type(elem))\r\n\r\n    # Add row to data list\r\n    data.append(row)\r\n\r\n# Output the final formatted list for Excel\r\nOUT = data\r\n",
+      "Code": "import clr\r\nclr.AddReference('RevitServices')\r\nfrom RevitServices.Persistence import DocumentManager\r\n\r\nimport clr\r\nclr.AddReference('RevitServices')\r\nfrom RevitServices.Persistence import DocumentManager\r\n\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitNodes')\r\nimport Autodesk\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, ElementId, Parameter, Location, LocationCurve, LocationPoint, BuiltInCategory\r\n\r\n# Get the active Revit document\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n# Hard-coded list of excluded categories\r\nexcluded_categories = [\r\n    \"Levels\", \"Materials\", \"Phases\", \"Views\", \"Primary Contours\", \"Area Schemes\", \"Shared Site\", \"Work Plane Grid\",\r\n    \"Revision\", \"Project Information\", \"Structural Load Cases\", \"Sun Path\", \"Internal Origin\", \"Elevations\", \"Cameras\",\r\n    \"Section Boxes\", \"Color Fill Schema\", \"HVAC Zones\", \"HVAC Load Schedules\", \"Building Type Settings\",\r\n    \"Space Type Settings\", \"Survey Point\", \"Project Base Point\", \"Electrical Demand Factor Definitions\",\r\n    \"Electrical Load Classifications\", \"Panel Schedule Templates - Branch Panel\",\r\n    \"Panel Schedule Templates - Data Panel\", \"Panel Schedule Templates - Switchboard\",\r\n    \"Electrical Load Classification Parameter Element\", \"Material Assets\", \"Pipe Segments\", \"Legend Components\",\r\n    \"Schedules\", \"Revision Numbering Sequences\", \"Area Based Load Type\", \"RVT Links\", \"Plumbing Equipment Tags\",\r\n    \"Text Notes\", \"Pipe Tags\", \"Duct Tags\", \"Pipe Accessories\", \"Scope Boxes\", \"Sheets\", \"Title Blocks\", \"Viewports\",\r\n    \"Guide Grid\", \"Plumbing Fixtures\", \"Reference Planes\", \"Raster Images\", \"Generic Annotations\", \"Lines\", \"Spaces\",\r\n    \"Constraints\", \"Duct Systems\", \"Sun Path\", \"Pipe Tags\", \"Schedule Graphics\", \"Detail Items\",\r\n    \"<Sketch>\", \"Automatic Sketch Dimensions\", \"Schedules\", \"Schedule Graphics\", \"Sun Path\", \"Work Plan Grid\", \"Materials\"\r\n]\r\n\r\n# Define allowed BuiltInCategories (Only physical model elements)\r\nallowed_categories = [\r\n    BuiltInCategory.OST_PipeCurves,\r\n    BuiltInCategory.OST_DuctCurves,\r\n    BuiltInCategory.OST_Walls,\r\n    BuiltInCategory.OST_Floors,\r\n    BuiltInCategory.OST_StructuralFraming,\r\n    BuiltInCategory.OST_Columns,\r\n    BuiltInCategory.OST_MechanicalEquipment,\r\n    BuiltInCategory.OST_PlumbingFixtures,\r\n    BuiltInCategory.OST_StructuralColumns,\r\n    BuiltInCategory.OST_Doors,\r\n    BuiltInCategory.OST_Windows\r\n]\r\n\r\n# Collect all model elements\r\ncollector = FilteredElementCollector(doc).WhereElementIsNotElementType().ToElements()\r\n\r\n# Initialize list for storing filtered elements\r\nfiltered_elements = []\r\nfor elem in collector:\r\n    # Check that element has a valid category\r\n    if not elem.Category:\r\n        continue\r\n    # Exclude elements whose category name is in the excluded list\r\n    if elem.Category.Name in excluded_categories:\r\n        continue\r\n    # Only include elements whose category is one of our allowed BuiltInCategories.\r\n    # Note: Allowed categories are stored as BuiltInCategory enum values; we compare using the integer value.\r\n    if elem.Category.Id.IntegerValue in [int(cat) for cat in allowed_categories]:\r\n        filtered_elements.append(elem)\r\n\r\n# Initialize data list and add column headers (Ordered as requested)\r\ndata = []\r\nheaders = [\"Element ID\", \"System Abbreviation\", \"Category\", \"Element Level\", \"Element Type\", \r\n           \"Element Size\", \"Element Length\", \"Element Name\", \r\n           \"System Classification\", \"System Type\", \"Building Location MTI\", \"Scope Const\", \"Scope Chord\",\r\n           \"Start X\", \"Start Y\", \"Start Z\", \"End X\", \"End Y\", \"End Z\"]\r\ndata.append(headers)\r\n\r\n# Function to safely get a parameter value (returns blank if missing)\r\ndef get_param_value(element, param_name):\r\n    param = element.LookupParameter(param_name)\r\n    if param and param.HasValue:\r\n        # Return the parameter as string or its value string\r\n        return param.AsString() if param.StorageType == Autodesk.Revit.DB.StorageType.String else param.AsValueString()\r\n    return \"\"\r\n\r\n# Function to get the element type name\r\ndef get_element_type(element):\r\n    try:\r\n        element_type = doc.GetElement(element.GetTypeId()).Name\r\n        return element_type if element_type else \"Unknown Type\"\r\n    except:\r\n        return \"Unknown Type\"\r\n\r\n# Function to get start and end coordinates for an element\r\ndef get_element_coordinates(element):\r\n    start_x = start_y = start_z = end_x = end_y = end_z = \"\"\r\n    if isinstance(element.Location, LocationCurve):\r\n        curve = element.Location.Curve\r\n        start_pt = curve.GetEndPoint(0)\r\n        end_pt = curve.GetEndPoint(1)\r\n        start_x, start_y, start_z = start_pt.X, start_pt.Y, start_pt.Z\r\n        end_x, end_y, end_z = end_pt.X, end_pt.Y, end_pt.Z\r\n    elif isinstance(element.Location, LocationPoint):\r\n        pt = element.Location.Point\r\n        start_x, start_y, start_z = pt.X, pt.Y, pt.Z\r\n    elif element.get_BoundingBox(None):\r\n        bbox = element.get_BoundingBox(None)\r\n        start_x, start_y, start_z = bbox.Min.X, bbox.Min.Y, bbox.Min.Z\r\n        end_x, end_y, end_z = bbox.Max.X, bbox.Max.Y, bbox.Max.Z\r\n    return start_x, start_y, start_z, end_x, end_y, end_z\r\n\r\n# Loop through each filtered element and extract properties\r\nfor elem in filtered_elements:\r\n    row = []\r\n    row.append(elem.Id.IntegerValue)                                      # Element ID\r\n    row.append(get_param_value(elem, \"System Abbreviation\"))                # System Abbreviation\r\n    row.append(elem.Category.Name)                                          # Category\r\n    row.append(get_param_value(elem, \"Level\"))                              # Element Level\r\n    row.append(get_element_type(elem))                                      # Element Type\r\n    row.append(get_param_value(elem, \"Size\"))                               # Element Size\r\n    row.append(get_param_value(elem, \"Length\"))                             # Element Length\r\n    \r\n    # Element Name (fallback to \"Family and Type\" if \"Name\" is blank)\r\n    name_val = get_param_value(elem, \"Name\")\r\n    if name_val == \"\":\r\n        name_val = get_param_value(elem, \"Family and Type\")\r\n    row.append(name_val)                                                    # Element Name\r\n    \r\n    row.append(get_param_value(elem, \"System Classification\"))              # System Classification\r\n    row.append(get_param_value(elem, \"System Type\"))                        # System Type\r\n    row.append(get_param_value(elem, \"Building Location MTI\"))              # Building Location MTI\r\n    row.append(get_param_value(elem, \"Scope Const\"))                        # Scope Const\r\n    row.append(get_param_value(elem, \"Scope Chord\"))                        # Scope Chord\r\n\r\n    # Get element coordinates (start and end)\r\n    sx, sy, sz, ex, ey, ez = get_element_coordinates(elem)\r\n    row.append(sx)  # Start X\r\n    row.append(sy)  # Start Y\r\n    row.append(sz)  # Start Z\r\n    row.append(ex)  # End X\r\n    row.append(ey)  # End Y\r\n    row.append(ez)  # End Z\r\n\r\n    data.append(row)\r\n\r\n# Output the final formatted list for Excel export\r\nOUT = data\r\n",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "ef135d67b387442d98648891556ca146",
@@ -164,7 +164,7 @@
       "Inputs": [],
       "Outputs": [
         {
-          "Id": "9e5488715e85408dae9d3a961dd4457b",
+          "Id": "b44318f6d5294f8b9f709aa1a0203591",
           "Name": "",
           "Description": "Value of expression at line 1",
           "UsingDefaultValue": false,
@@ -173,7 +173,7 @@
           "KeepListStructure": false
         },
         {
-          "Id": "91c46303aada4050a654ad4ff9131742",
+          "Id": "9e7ff81a3a254c9797235cb89c5e2ba0",
           "Name": "",
           "Description": "Value of expression at line 2",
           "UsingDefaultValue": false,
@@ -182,7 +182,7 @@
           "KeepListStructure": false
         },
         {
-          "Id": "788b32bd9bc2450f8ce49f83309c86a0",
+          "Id": "37eed56786ce44409a0004c452733293",
           "Name": "",
           "Description": "Value of expression at line 3",
           "UsingDefaultValue": false,
@@ -193,7 +193,7 @@
       ],
       "Replication": "Disabled",
       "Description": "Allows for DesignScript code to be authored directly",
-      "Code": "\"Sheet1\";\n0;\n0;"
+      "Code": "\"Sheet4\";\n0;\n0;"
     },
     {
       "ConcreteType": "CoreNodeModels.Input.Filename, CoreNodeModels",
@@ -213,33 +213,303 @@
       ],
       "Replication": "Disabled",
       "Description": "Allows you to select a file on the system and returns its file path",
-      "HintPath": "No file selected.",
-      "InputValue": "No file selected."
+      "HintPath": "C:\\Users\\Nafis\\OneDrive\\Desktop\\No file selected.xlsx",
+      "InputValue": ".\\No file selected.xlsx"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "# Load the Python Standard and DesignScript Libraries\r\nimport sys\r\nimport clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\n\r\nimport clr\r\nclr.AddReference('RevitServices')\r\nfrom RevitServices.Persistence import DocumentManager\r\n\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitNodes')\r\nimport Autodesk\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, ElementId, Parameter\r\n\r\nimport csv\r\n\r\n# Get the active Revit document\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n# Read the sector boundaries from the input Excel table (IN[0])\r\nsector_data = IN[0]  # Expected format: List of lists (from Dynamo's \"Excel.ReadFromFile\" node)\r\n\r\n# Convert sector data into a list of dictionaries for easy lookup\r\nsectors = []\r\nfor row in sector_data[1:]:  # Skip headers\r\n    try:\r\n        sector = {\r\n            \"Sector_Name\": row[0],\r\n            \"X1\": float(row[1]),\r\n            \"X2\": float(row[2]),\r\n            \"Y1\": float(row[3]),\r\n            \"Y2\": float(row[4])\r\n        }\r\n        # Ensure X1 is always the smaller value\r\n        sector[\"X1\"], sector[\"X2\"] = min(sector[\"X1\"], sector[\"X2\"]), max(sector[\"X1\"], sector[\"X2\"])\r\n        # Ensure Y1 is always the smaller value\r\n        sector[\"Y1\"], sector[\"Y2\"] = min(sector[\"Y1\"], sector[\"Y2\"]), max(sector[\"Y1\"], sector[\"Y2\"])\r\n        sectors.append(sector)\r\n    except ValueError:\r\n        continue  # Skip rows with invalid values\r\n\r\n# Get Revit elements from Dynamo input (IN[1])\r\nelement_data = IN[1]  # Expected format: List of lists (previous script output)\r\n\r\n# Add a new column for \"Sector Name\"\r\nheaders = element_data[0] + [\"Sector Name\"]\r\nupdated_data = [headers]\r\n\r\n# Function to determine which sector an element belongs to\r\ndef get_sector_name(x, y):\r\n    try:\r\n        x = float(x)\r\n        y = float(y)\r\n        for sector in sectors:\r\n            if sector[\"X1\"] <= x <= sector[\"X2\"] and sector[\"Y1\"] <= y <= sector[\"Y2\"]:\r\n                return sector[\"Sector_Name\"]\r\n        return \"\"  # If element is outside all defined sectors, return blank\r\n    except ValueError:\r\n        return \"\"  # Return blank if coordinates are not valid numbers\r\n\r\n# Process each element\r\nfor row in element_data[1:]:  # Skip headers\r\n    try:\r\n        element_id = row[0]\r\n        start_x = float(row[-6])  # Convert Start X to float\r\n        start_y = float(row[-5])  # Convert Start Y to float\r\n\r\n        # Get sector for the element based on Start X, Start Y\r\n        sector_name = get_sector_name(start_x, start_y)\r\n\r\n        # Append new data with sector name\r\n        updated_row = row + [sector_name]\r\n        updated_data.append(updated_row)\r\n    except ValueError:\r\n        updated_data.append(row + [\"\"])  # Return blank if data conversion fails\r\n\r\n# Output the final formatted list for Excel\r\nOUT = updated_data\r\n\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "dbb36abb58f9470e8a27616b6cadf467",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "d7f9648f3ce749d88e2963090e5705e2",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "6982973870f34eacb8e0d8e870d7f425",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "0dc1b595989c4817b2df1b6003af74a0",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "Id": "3a2e61dba058411a8873ed8c4de0bca7",
+      "NodeType": "FunctionNode",
+      "Inputs": [
+        {
+          "Id": "8dc9913b5400429c96524848589cb878",
+          "Name": "file",
+          "Description": "var",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "4c448e9053e0441f9b8626dfbc484ee7",
+          "Name": "sheetName",
+          "Description": "string",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "1e5c861b755544a0b597dbf85c1b99b6",
+          "Name": "readAsStrings",
+          "Description": "bool\nDefault value : false",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "c25dae3e569849809b4e7e15b46f0c28",
+          "Name": "showExcel",
+          "Description": "bool\nDefault value : true",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "83bf4b5b90734e5abac44e22212e55f9",
+          "Name": "var[][]",
+          "Description": "var[][]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "FunctionSignature": "DSOffice.Data.ImportExcel@var,string,bool,bool",
+      "Replication": "Auto",
+      "Description": "Data.ImportExcel (file: var, sheetName: string, readAsStrings: bool = false, showExcel: bool = true): var[][]"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.Filename, CoreNodeModels",
+      "Id": "7f68246aaaad4b368bc8187097ad7f37",
+      "NodeType": "ExtensionNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "da8aeccb85584dbe8ca3727ece91ba51",
+          "Name": "",
+          "Description": "File Path",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows you to select a file on the system and returns its file path",
+      "HintPath": "C:\\Users\\Nafis\\OneDrive\\Documentos\\Sector Test.xlsx",
+      "InputValue": "..\\Documentos\\Sector Test.xlsx"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.StringInput, CoreNodeModels",
+      "Id": "9b92785f58064289916fc7108a753571",
+      "NodeType": "StringInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "7a17dbb747fe4c4e8809b49e37872091",
+          "Name": "",
+          "Description": "String",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a string",
+      "InputValue": "Sheet1"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.FileObject, CoreNodeModels",
+      "Id": "f49957a3eece4f369b1b0bf69f133787",
+      "NodeType": "ExtensionNode",
+      "Inputs": [
+        {
+          "Id": "d1951e00e0314fcfb0213154aee3cec2",
+          "Name": "path",
+          "Description": "Path to the file.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "8d39bfe71e4a46799dea82a2bd7aab1c",
+          "Name": "file",
+          "Description": "File object",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a file object from the given path"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "# Load the Python Standard and DesignScript Libraries\r\nimport sys\r\nimport clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\nimport clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import Point, Line\r\n\r\n# Step 1: Read sector boundaries from the input (IN[0])\r\nsector_data = IN[0]  # Expected format: List of lists from Excel or Dynamo\r\n\r\n# Convert sector data into a list of dictionaries\r\nsectors = []\r\nfor row in sector_data[1:]:  # Skip headers\r\n    try:\r\n        sector = {\r\n            \"Sector_Name\": row[0],\r\n            \"X1\": float(row[1]),\r\n            \"X2\": float(row[2]),\r\n            \"Y1\": float(row[3]),\r\n            \"Y2\": float(row[4])\r\n        }\r\n        # Ensure X1 is always the smaller value\r\n        sector[\"X1\"], sector[\"X2\"] = min(sector[\"X1\"], sector[\"X2\"]), max(sector[\"X1\"], sector[\"X2\"])\r\n        # Ensure Y1 is always the smaller value\r\n        sector[\"Y1\"], sector[\"Y2\"] = min(sector[\"Y1\"], sector[\"Y2\"]), max(sector[\"Y1\"], sector[\"Y2\"])\r\n        sectors.append(sector)\r\n    except ValueError:\r\n        continue  # Skip invalid rows\r\n\r\n# Step 2: Generate Dynamo geometry (lines)\r\nlines = []\r\nfor sector in sectors:\r\n    bottom_left = Point.ByCoordinates(sector[\"X1\"], sector[\"Y1\"], 0)\r\n    bottom_right = Point.ByCoordinates(sector[\"X2\"], sector[\"Y1\"], 0)\r\n    top_right = Point.ByCoordinates(sector[\"X2\"], sector[\"Y2\"], 0)\r\n    top_left = Point.ByCoordinates(sector[\"X1\"], sector[\"Y2\"], 0)\r\n\r\n    # Create boundary lines\r\n    lines.append(Line.ByStartPointEndPoint(bottom_left, bottom_right))  # Bottom\r\n    lines.append(Line.ByStartPointEndPoint(bottom_right, top_right))  # Right\r\n    lines.append(Line.ByStartPointEndPoint(top_right, top_left))  # Top\r\n    lines.append(Line.ByStartPointEndPoint(top_left, bottom_left))  # Left\r\n\r\n# Output the list of lines to Dynamo\r\nOUT = lines\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "7cfc345a979943cdb09e0d6a3b653ec7",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "a70a78343ff246d59e6104645b79d2ff",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "462a5cb2250342e0bfa3d3e53199c11f",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "# Load the Python Standard and DesignScript Libraries\r\nimport sys\r\nimport clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\n# Load Revit API and Dynamo Libraries\r\nimport clr\r\nclr.AddReference('RevitServices')\r\nfrom RevitServices.Persistence import DocumentManager\r\n\r\nclr.AddReference('RevitAPI')\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Element, Location, LocationCurve, LocationPoint, XYZ\r\n\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import Point, Line\r\n\r\n# Get the active Revit document\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n# Step 1: Collect all elements from Revit (excluding element types)\r\ncollector = FilteredElementCollector(doc).WhereElementIsNotElementType().ToElements()\r\n\r\n# Step 2: Extract element coordinates\r\npoints = []  # Store points for Dynamo visualization\r\nlines = []  # Store lines for Dynamo visualization\r\n\r\nfor elem in collector:\r\n    try:\r\n        # Get the element location\r\n        if isinstance(elem.Location, LocationCurve):  # Curved elements (e.g., pipes, ducts)\r\n            start_pt = elem.Location.Curve.GetEndPoint(0)\r\n            end_pt = elem.Location.Curve.GetEndPoint(1)\r\n\r\n            # Convert to Dynamo Points\r\n            start_point = Point.ByCoordinates(start_pt.X, start_pt.Y, start_pt.Z)\r\n            end_point = Point.ByCoordinates(end_pt.X, end_pt.Y, end_pt.Z)\r\n\r\n            # Add line to visualization\r\n            lines.append(Line.ByStartPointEndPoint(start_point, end_point))\r\n\r\n        elif isinstance(elem.Location, LocationPoint):  # Point-based elements (e.g., fixtures, furniture)\r\n            pt = elem.Location.Point\r\n            dyn_point = Point.ByCoordinates(pt.X, pt.Y, pt.Z)\r\n            points.append(dyn_point)\r\n\r\n        elif elem.get_BoundingBox(None):  # Elements with a bounding box (e.g., walls, floors)\r\n            bbox = elem.get_BoundingBox(None)\r\n            center_x = (bbox.Min.X + bbox.Max.X) / 2  # Get center of bounding box\r\n            center_y = (bbox.Min.Y + bbox.Max.Y) / 2\r\n            center_z = (bbox.Min.Z + bbox.Max.Z) / 2\r\n            dyn_point = Point.ByCoordinates(center_x, center_y, center_z)\r\n            points.append(dyn_point)\r\n\r\n    except:\r\n        continue  # Skip elements that fail\r\n\r\n# Output all elements as Dynamo Points & Lines\r\nOUT = (points, lines)\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "e75ee5addec04362968950fd96c9b0fb",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "48a7d4927aa34e94ac634f59407da3cd",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "90b4a74a5e714411bab6538ddee29a62",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "# Load the Python Standard and DesignScript Libraries\r\nimport sys\r\nimport clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\n# Load Revit API and Dynamo Libraries\r\nimport clr\r\nclr.AddReference('RevitServices')\r\nfrom RevitServices.Persistence import DocumentManager\r\n\r\nclr.AddReference('RevitAPI')\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Element, Location, LocationCurve, LocationPoint, XYZ\r\n\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import Point, Line\r\n\r\n# Get the active Revit document\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n# Step 1: Collect all elements from Revit\r\ncollector = FilteredElementCollector(doc).WhereElementIsNotElementType().ToElements()\r\n\r\n# Step 2: Define lists for normal and highlighted elements\r\npoints_normal = []\r\npoints_highlighted = []\r\nlines_normal = []\r\nlines_highlighted = []\r\n\r\n# Define categories or conditions for highlighting\r\nhighlight_categories = [\"Pipes\", \"Ducts\"]  # Example: Highlight only Pipes & Ducts\r\n\r\nfor elem in collector:\r\n    try:\r\n        # Determine if the element should be highlighted\r\n        category_name = elem.Category.Name if elem.Category else \"Unknown\"\r\n        is_highlighted = category_name in highlight_categories\r\n\r\n        # Get the element location\r\n        if isinstance(elem.Location, LocationCurve):  # Curved elements (e.g., pipes, ducts)\r\n            start_pt = elem.Location.Curve.GetEndPoint(0)\r\n            end_pt = elem.Location.Curve.GetEndPoint(1)\r\n\r\n            # Convert to Dynamo Points\r\n            start_point = Point.ByCoordinates(start_pt.X, start_pt.Y, start_pt.Z)\r\n            end_point = Point.ByCoordinates(end_pt.X, end_pt.Y, end_pt.Z)\r\n\r\n            # Add to respective list based on highlight condition\r\n            if is_highlighted:\r\n                lines_highlighted.append(Line.ByStartPointEndPoint(start_point, end_point))\r\n            else:\r\n                lines_normal.append(Line.ByStartPointEndPoint(start_point, end_point))\r\n\r\n        elif isinstance(elem.Location, LocationPoint):  # Point-based elements (e.g., fixtures, furniture)\r\n            pt = elem.Location.Point\r\n            dyn_point = Point.ByCoordinates(pt.X, pt.Y, pt.Z)\r\n\r\n            # Add to respective list based on highlight condition\r\n            if is_highlighted:\r\n                points_highlighted.append(dyn_point)\r\n            else:\r\n                points_normal.append(dyn_point)\r\n\r\n        elif elem.get_BoundingBox(None):  # Elements with a bounding box (e.g., walls, floors)\r\n            bbox = elem.get_BoundingBox(None)\r\n            center_x = (bbox.Min.X + bbox.Max.X) / 2  # Get center of bounding box\r\n            center_y = (bbox.Min.Y + bbox.Max.Y) / 2\r\n            center_z = (bbox.Min.Z + bbox.Max.Z) / 2\r\n            dyn_point = Point.ByCoordinates(center_x, center_y, center_z)\r\n\r\n            # Add to respective list based on highlight condition\r\n            if is_highlighted:\r\n                points_highlighted.append(dyn_point)\r\n            else:\r\n                points_normal.append(dyn_point)\r\n\r\n    except:\r\n        continue  # Skip elements that fail\r\n\r\n# Output: Normal elements and highlighted elements separately\r\nOUT = (points_normal, lines_normal, points_highlighted, lines_highlighted)\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "b33a69a7e3a34ce29665efc1d47e56db",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "3b806635812747908e9dc25108266850",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "f5313cfb3df24499a1067afd509e2320",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
     }
   ],
   "Connectors": [
     {
       "Start": "f4f1a18e693e48a3b00ef06fb3fc0968",
+      "End": "6982973870f34eacb8e0d8e870d7f425",
+      "Id": "4a967e6e9dc7454b8726d9240d198b7d",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "f4f1a18e693e48a3b00ef06fb3fc0968",
       "End": "8eac470dc69e4b3e8111d8a6f87c3a22",
-      "Id": "e4a3ddd9e2aa4c4cb99f5c18d4c902da",
+      "Id": "2b11ef77737541aa884fa228e0836661",
       "IsHidden": "False"
     },
     {
-      "Start": "9e5488715e85408dae9d3a961dd4457b",
+      "Start": "b44318f6d5294f8b9f709aa1a0203591",
       "End": "8ac34f641e0047a0a3e2dbdc8c22cf89",
-      "Id": "06c4cc19b7b64d8e980de353d50d4a78",
+      "Id": "adfed90b58b6419a8681e60945533c28",
       "IsHidden": "False"
     },
     {
-      "Start": "91c46303aada4050a654ad4ff9131742",
+      "Start": "9e7ff81a3a254c9797235cb89c5e2ba0",
       "End": "d64095c77a8b404fb43670e2ce3cddcc",
-      "Id": "4b2cde0ccf5b475ca4379cf63c1999be",
+      "Id": "b256aaaf9b944acf8144c149005c5020",
       "IsHidden": "False"
     },
     {
-      "Start": "788b32bd9bc2450f8ce49f83309c86a0",
+      "Start": "37eed56786ce44409a0004c452733293",
       "End": "65a014c882074f82b19c95a44614d2f6",
-      "Id": "683b423500e04b6f8ca130ca32206922",
+      "Id": "510989e9f46c411a8191b7d717febc9a",
       "IsHidden": "False"
     },
     {
@@ -247,11 +517,56 @@
       "End": "1f7f457b57a24f81b23b20d1eaf8f8b9",
       "Id": "2600f8ab1b3445979d97501d127862f7",
       "IsHidden": "False"
+    },
+    {
+      "Start": "83bf4b5b90734e5abac44e22212e55f9",
+      "End": "d7f9648f3ce749d88e2963090e5705e2",
+      "Id": "eaf1636359a2442f8c7e8720d749dc6a",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "83bf4b5b90734e5abac44e22212e55f9",
+      "End": "a70a78343ff246d59e6104645b79d2ff",
+      "Id": "17e758af882e47a6a1db44cf65b5cb47",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "da8aeccb85584dbe8ca3727ece91ba51",
+      "End": "d1951e00e0314fcfb0213154aee3cec2",
+      "Id": "cf4583b2d6c54ebc8f959cce53282e38",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "7a17dbb747fe4c4e8809b49e37872091",
+      "End": "4c448e9053e0441f9b8626dfbc484ee7",
+      "Id": "2a0fe6bea66d40399986fa61b7bd6b86",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "8d39bfe71e4a46799dea82a2bd7aab1c",
+      "End": "8dc9913b5400429c96524848589cb878",
+      "Id": "3f23d5ad63fd43ba8a0e48263d06588c",
+      "IsHidden": "False"
     }
   ],
   "Dependencies": [],
-  "NodeLibraryDependencies": [],
-  "EnableLegacyPolyCurveBehavior": null,
+  "NodeLibraryDependencies": [
+    {
+      "Name": "No file selected.xlsx",
+      "ReferenceType": "External",
+      "Nodes": [
+        "cfafdc3427eb49c5979220bd3270b9e4"
+      ]
+    },
+    {
+      "Name": "Sector Test.xlsx",
+      "ReferenceType": "External",
+      "Nodes": [
+        "7f68246aaaad4b368bc8187097ad7f37"
+      ]
+    }
+  ],
+  "EnableLegacyPolyCurveBehavior": true,
   "Thumbnail": "",
   "GraphDocumentationURL": null,
   "ExtensionWorkspaceData": [
@@ -287,12 +602,12 @@
     },
     "Camera": {
       "Name": "_Background Preview",
-      "EyeX": -17.0,
-      "EyeY": 24.0,
-      "EyeZ": 50.0,
-      "LookX": 12.0,
-      "LookY": -13.0,
-      "LookZ": -58.0,
+      "EyeX": -60.939884185791016,
+      "EyeY": 71.60151672363281,
+      "EyeZ": 262.37628173828125,
+      "LookX": 55.939884185791016,
+      "LookY": -60.60151672363281,
+      "LookZ": -270.37628173828125,
       "UpX": 0.0,
       "UpY": 1.0,
       "UpZ": 0.0
@@ -306,8 +621,8 @@
         "IsSetAsOutput": false,
         "Excluded": false,
         "ShowGeometry": true,
-        "X": 76.0,
-        "Y": 35.0
+        "X": -189.43102682844506,
+        "Y": 0.5547522436369263
       },
       {
         "Id": "ef135d67b387442d98648891556ca146",
@@ -316,8 +631,8 @@
         "IsSetAsOutput": false,
         "Excluded": false,
         "ShowGeometry": true,
-        "X": 86.0,
-        "Y": 493.0
+        "X": 220.4510866556741,
+        "Y": 488.66286817239757
       },
       {
         "Id": "64c166e26c8246cc8a3fa7a4ecb6e84d",
@@ -326,8 +641,8 @@
         "IsSetAsOutput": false,
         "Excluded": false,
         "ShowGeometry": true,
-        "X": 598.2073179471313,
-        "Y": 257.5196192625459
+        "X": 1071.3781043182519,
+        "Y": 316.8842197666717
       },
       {
         "Id": "77c92a4aa6524d26b045a10e87e579aa",
@@ -348,11 +663,91 @@
         "ShowGeometry": true,
         "X": 346.01106589279186,
         "Y": 149.24929338439097
+      },
+      {
+        "Id": "dbb36abb58f9470e8a27616b6cadf467",
+        "Name": "Python Script",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 676.797367995073,
+        "Y": 701.4657228204131
+      },
+      {
+        "Id": "3a2e61dba058411a8873ed8c4de0bca7",
+        "Name": "Data.ImportExcel",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 316.19230607192526,
+        "Y": 1017.1850257633296
+      },
+      {
+        "Id": "7f68246aaaad4b368bc8187097ad7f37",
+        "Name": "File Path",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": -234.54474480451256,
+        "Y": 988.8510290737916
+      },
+      {
+        "Id": "9b92785f58064289916fc7108a753571",
+        "Name": "String",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": -98.2156537862013,
+        "Y": 1139.2997214582529
+      },
+      {
+        "Id": "f49957a3eece4f369b1b0bf69f133787",
+        "Name": "File From Path",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 88.82206859296082,
+        "Y": 949.7676707703974
+      },
+      {
+        "Id": "7cfc345a979943cdb09e0d6a3b653ec7",
+        "Name": "Python Script",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 822.6388429847527,
+        "Y": 1095.2905522463307
+      },
+      {
+        "Id": "e75ee5addec04362968950fd96c9b0fb",
+        "Name": "Python Script",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 170.97529547142426,
+        "Y": 1366.2181586275644
+      },
+      {
+        "Id": "b33a69a7e3a34ce29665efc1d47e56db",
+        "Name": "Python Script",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 347.936575404374,
+        "Y": 2222.9559188305634
       }
     ],
     "Annotations": [],
-    "X": 125.50003024975359,
-    "Y": 123.33058758209626,
-    "Zoom": 0.6917013637693442
+    "X": 22.45406595207291,
+    "Y": -136.9290700286291,
+    "Zoom": 0.3568539215437414
   }
 }
